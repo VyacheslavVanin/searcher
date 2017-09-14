@@ -35,7 +35,7 @@ T extract(std::queue<T>& c)
 template <typename C, typename V>
 bool contain(const C& c, const V& v)
 {
-    return c.find(v) != c.end();
+    return std::find(c.begin(), c.end(), v) != c.end();
 }
 
 template <typename State, typename IsGoal, typename GenSuccessors>
@@ -89,6 +89,70 @@ struct dfs_ret {
     DFS_RESULT result;
 };
 
+
+template <typename State, typename IsGoal, typename GenSuccessors>
+class DFS_Searcher {
+public:
+    struct dfs_ret {
+        std::vector<State> path;
+        DFS_RESULT result;
+    };
+
+    DFS_Searcher(const State& start, const IsGoal& isGoal,
+                 const GenSuccessors& successors);
+
+    dfs_ret find_next(uint64_t maxDepth);
+
+private:
+    std::stack<std::pair<State, int>> nodes_to_visit;
+    std::set<State> visited;
+    std::vector<State> path;
+
+    const State start;
+    const IsGoal isGoal;
+    const GenSuccessors successors;
+};
+
+template <typename State, typename IsGoal, typename GenSuccessors>
+DFS_Searcher<State, IsGoal, GenSuccessors>::DFS_Searcher(
+    const State& start, const IsGoal& isGoal, const GenSuccessors& successors)
+    : start(start), isGoal(isGoal), successors(successors),
+      nodes_to_visit({std::make_pair(start, 0)}), path()
+{
+}
+
+template <typename State, typename IsGoal, typename GenSuccessors>
+typename DFS_Searcher<State, IsGoal, GenSuccessors>::dfs_ret
+DFS_Searcher<State, IsGoal, GenSuccessors>::find_next(uint64_t maxDepth)
+{
+    bool cutoff = false;
+
+    while (true) {
+        if (nodes_to_visit.empty()) {
+            if (cutoff)
+                return {{}, DFS_RESULT::CUTOFF};
+            else
+                return {{}, DFS_RESULT::NOT_FOUND};
+        }
+
+        const auto & [ currentState, currentLvl ] = extract(nodes_to_visit);
+
+        path.resize(currentLvl);
+        path.push_back(currentState);
+
+        if (isGoal(currentState))
+            return {path, DFS_RESULT::FOUND};
+
+        if (currentLvl >= maxDepth) {
+            cutoff = true;
+            continue;
+        }
+
+        for (const auto& s : successors(currentState))
+            if (!contain(path, s))
+                nodes_to_visit.push(std::make_pair(s, currentLvl + 1));
+    }
+}
 
 template <typename State, typename IsGoal, typename GenSuccessors>
 dfs_ret<State> dfs_search(const State& start, const IsGoal& isGoal,
@@ -174,7 +238,7 @@ std::vector<State> bfs_search(const State& start, const Goal& isGoal,
 
 std::ostream& operator<<(std::ostream& out, const std::pair<int, int>& p)
 {
-    return out << p.first << "; " << p.second << '\n';
+    return out << p.first << "; " << p.second;
 }
 
 const auto R = 7;
@@ -216,14 +280,36 @@ int main()
     const auto start = std::make_pair(0, 0);
     auto path        = bfs_search(start, goal, succ);
     for (const auto& p : path)
-        std::cout << p;
+        std::cout << p << "\n";
     std::cout << "-----------------\n";
     auto path2 = dfs_search(start, goal, succ);
     for (const auto& p : path2)
-        std::cout << p;
+        std::cout << p << "\n";
 
     const auto path3 = idfs_search(start, goal, succ, 200);
     if (path3.result == DFS_RESULT::FOUND)
         for (const auto& p : path3.path)
-            std::cout << p;
+            std::cout << p << "\n";
+
+    std::cout << "Searcher !!!!!!!!!!!!!!!!!\n";
+    DFS_Searcher searcher(start, goal, succ);
+    const auto path4 = searcher.find_next(200);
+    const auto path5 = searcher.find_next(200);
+    std::cout << path4.result << ", " << path5.result << "\n";
+    if (path4.result == DFS_RESULT::FOUND && path5.result == DFS_RESULT::FOUND) {
+        const auto s4 = path4.path.size();
+        const auto s5 = path5.path.size();
+        const auto s = std::max(s4, s5);
+        for (size_t i = 0; i < s; ++i) {
+            if (i < s4)
+                std::cout << path4.path[i];
+            else
+                std::cout << "  ;  ";
+            std::cout << "  :  ";
+            if (i < s5)
+                std::cout << path5.path[i] << "\n";
+            else
+                std::cout << "  ;  \n";
+        }
+    }
 }

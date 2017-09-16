@@ -21,6 +21,8 @@ template <typename State, typename IsGoal, typename GenSuccessors>
 std::vector<State> dfs_search(const State& start, const IsGoal& isGoal,
                               const GenSuccessors& successors)
 {
+    using namespace vvv::helpers;
+
     std::stack<std::pair<State, int>> nodes_to_visit;
     std::set<State> visited;
     std::vector<State> ret;
@@ -68,6 +70,8 @@ template <typename State, typename IsGoal, typename GenSuccessors>
 dfs_ret<State> dfs_search(const State& start, const IsGoal& isGoal,
                           const GenSuccessors& successors, size_t maxDepth)
 {
+    using namespace vvv::helpers;
+
     std::stack<std::pair<State, int>> nodes_to_visit;
     std::set<State> visited;
     std::vector<State> ret;
@@ -121,6 +125,8 @@ template <typename State, typename Goal, typename Successors>
 std::vector<State> bfs_search(const State& start, const Goal& isGoal,
                               const Successors& successors)
 {
+    using namespace vvv::helpers;
+
     using path = std::vector<State>;
     std::queue<path> posibleways;
     posibleways.push({start});

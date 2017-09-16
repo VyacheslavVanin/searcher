@@ -4,28 +4,7 @@
 #include <queue>
 #include <stdint.h>
 #include <algorithm>
-
-template <typename T>
-T extract(std::stack<T>& c)
-{
-    T ret = std::move(c.top());
-    c.pop();
-    return ret;
-}
-
-template <typename T>
-T extract(std::queue<T>& c)
-{
-    T ret = std::move(c.front());
-    c.pop();
-    return ret;
-}
-
-template <typename C, typename V>
-bool contain(const C& c, const V& v)
-{
-    return std::find(c.begin(), c.end(), v) != c.end();
-}
+#include "stdhelper/containerhelper.hpp"
 
 enum class DFS_RESULT {
     FOUND,
@@ -67,6 +46,8 @@ template <typename State, typename IsGoal, typename GenSuccessors>
 typename DFS_Searcher<State, IsGoal, GenSuccessors>::dfs_ret
 DFS_Searcher<State, IsGoal, GenSuccessors>::find_next(uint64_t maxDepth)
 {
+    using namespace vvv::helpers;
+
     bool cutoff = false;
 
     while (true) {

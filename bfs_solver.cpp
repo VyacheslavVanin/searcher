@@ -5,6 +5,7 @@
 #include <stack>
 #include <unordered_set>
 #include <vector>
+#include "dfs_searcher.hpp"
 
 char grid[][8] = {
     {0, 1, 0, 0, 0, 0, 0, 0},
@@ -15,28 +16,6 @@ char grid[][8] = {
     {1, 1, 0, 0, 0, 0, 1, 1},
     {0, 0, 0, 0, 1, 0, 0, 0},
 };
-
-template <typename T>
-T extract(std::stack<T>& c)
-{
-    T ret = std::move(c.top());
-    c.pop();
-    return ret;
-}
-
-template <typename T>
-T extract(std::queue<T>& c)
-{
-    T ret = std::move(c.front());
-    c.pop();
-    return ret;
-}
-
-template <typename C, typename V>
-bool contain(const C& c, const V& v)
-{
-    return std::find(c.begin(), c.end(), v) != c.end();
-}
 
 template <typename State, typename IsGoal, typename GenSuccessors>
 std::vector<State> dfs_search(const State& start, const IsGoal& isGoal,
@@ -67,12 +46,6 @@ std::vector<State> dfs_search(const State& start, const IsGoal& isGoal,
 }
 
 
-enum class DFS_RESULT {
-    FOUND,
-    NOT_FOUND,
-    CUTOFF
-};
-
 std::ostream& operator << (std::ostream& str, const DFS_RESULT& r)
 {
     switch (r) {
@@ -90,69 +63,6 @@ struct dfs_ret {
 };
 
 
-template <typename State, typename IsGoal, typename GenSuccessors>
-class DFS_Searcher {
-public:
-    struct dfs_ret {
-        std::vector<State> path;
-        DFS_RESULT result;
-    };
-
-    DFS_Searcher(const State& start, const IsGoal& isGoal,
-                 const GenSuccessors& successors);
-
-    dfs_ret find_next(uint64_t maxDepth);
-
-private:
-    std::stack<std::pair<State, int>> nodes_to_visit;
-    std::set<State> visited;
-    std::vector<State> path;
-
-    const State start;
-    const IsGoal isGoal;
-    const GenSuccessors successors;
-};
-
-template <typename State, typename IsGoal, typename GenSuccessors>
-DFS_Searcher<State, IsGoal, GenSuccessors>::DFS_Searcher(
-    const State& start, const IsGoal& isGoal, const GenSuccessors& successors)
-    : start(start), isGoal(isGoal), successors(successors),
-      nodes_to_visit({std::make_pair(start, 0)}), path()
-{
-}
-
-template <typename State, typename IsGoal, typename GenSuccessors>
-typename DFS_Searcher<State, IsGoal, GenSuccessors>::dfs_ret
-DFS_Searcher<State, IsGoal, GenSuccessors>::find_next(uint64_t maxDepth)
-{
-    bool cutoff = false;
-
-    while (true) {
-        if (nodes_to_visit.empty()) {
-            if (cutoff)
-                return {{}, DFS_RESULT::CUTOFF};
-            else
-                return {{}, DFS_RESULT::NOT_FOUND};
-        }
-
-        const auto & [ currentState, currentLvl ] = extract(nodes_to_visit);
-
-        path.resize(currentLvl);
-        path.push_back(currentState);
-
-        if (isGoal(currentState))
-            return {path, DFS_RESULT::FOUND};
-
-        if (currentLvl >= maxDepth) {
-            cutoff = true;
-            continue;
-        }
-
-        for (const auto& s : successors(currentState))
-            if (!contain(path, s))
-                nodes_to_visit.push(std::make_pair(s, currentLvl + 1));
-    }
-}
 
 template <typename State, typename IsGoal, typename GenSuccessors>
 dfs_ret<State> dfs_search(const State& start, const IsGoal& isGoal,

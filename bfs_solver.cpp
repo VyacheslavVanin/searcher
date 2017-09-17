@@ -9,117 +9,13 @@
 
 char grid[][8] = {
     {0, 1, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 1, 0, 0, 1},
+    {0, 0, 0, 0, 1, 0, 1, 1},
     {1, 1, 1, 1, 1, 0, 0, 0},
     {0, 1, 0, 0, 0, 0, 1, 0},
     {0, 0, 0, 1, 1, 1, 1, 0},
     {1, 1, 0, 0, 0, 0, 1, 1},
     {0, 0, 0, 0, 1, 0, 0, 0},
 };
-
-template <typename State, typename IsGoal, typename GenSuccessors>
-std::vector<State> dfs_search(const State& start, const IsGoal& isGoal,
-                              const GenSuccessors& successors)
-{
-    using namespace vvv::helpers;
-
-    std::stack<std::pair<State, uint64_t>> nodes_to_visit;
-    std::set<State> visited;
-    std::vector<State> ret;
-
-    nodes_to_visit.push(std::make_pair(start, 0));
-
-    while (!nodes_to_visit.empty()) {
-        const auto & [ currentState, currentLvl ] = extract(nodes_to_visit);
-
-        ret.resize(currentLvl);
-        ret.push_back(currentState);
-
-        if (isGoal(currentState))
-            return ret;
-
-        visited.insert(currentState);
-        for (const auto& s : successors(currentState))
-            if (!contain(visited, s))
-                nodes_to_visit.push(std::make_pair(s, currentLvl + 1));
-    }
-
-    return {};
-}
-
-
-std::ostream& operator << (std::ostream& str, const DFS_RESULT& r)
-{
-    switch (r) {
-        case DFS_RESULT::FOUND: str << "FOUND"; break;
-        case DFS_RESULT::NOT_FOUND: str << "NOT FOUND"; break;
-        case DFS_RESULT::CUTOFF: str << "CUTOFF"; break;
-    }
-    return str;
-}
-
-template <typename State>
-struct dfs_ret {
-    std::vector<State> path;
-    DFS_RESULT result;
-};
-
-
-
-template <typename State, typename IsGoal, typename GenSuccessors>
-dfs_ret<State> dfs_search(const State& start, const IsGoal& isGoal,
-                          const GenSuccessors& successors, size_t maxDepth)
-{
-    using namespace vvv::helpers;
-
-    std::stack<std::pair<State, uint64_t>> nodes_to_visit;
-    std::set<State> visited;
-    std::vector<State> ret;
-    bool cutoff = false;
-
-    nodes_to_visit.push(std::make_pair(start, 0));
-
-    while (true) {
-        if (nodes_to_visit.empty()) {
-            if (cutoff)
-                return {{}, DFS_RESULT::CUTOFF};
-            else
-                return {{}, DFS_RESULT::NOT_FOUND};
-        }
-
-        const auto & [ currentState, currentLvl ] = extract(nodes_to_visit);
-
-        ret.resize(currentLvl);
-        ret.push_back(currentState);
-
-        if (isGoal(currentState))
-            return {std::move(ret), DFS_RESULT::FOUND};
-
-        visited.insert(currentState);
-        if (currentLvl >= maxDepth) {
-            cutoff = true;
-            continue;
-        }
-
-        for (const auto& s : successors(currentState))
-            if (!contain(visited, s))
-                nodes_to_visit.push(std::make_pair(s, currentLvl + 1));
-    }
-}
-
-template <typename State, typename IsGoal, typename GenSuccessors>
-dfs_ret<State> idfs_search(const State& start, const IsGoal& isGoal,
-                           const GenSuccessors& successors, uint64_t maxDepth)
-{
-    dfs_ret<State> ret{{}, DFS_RESULT::NOT_FOUND};
-    for (uint64_t depth = 1; depth < maxDepth; ++depth) {
-        ret = dfs_search(start, isGoal, successors, depth);
-        if (ret.result == DFS_RESULT::CUTOFF)
-            continue;
-        break;
-    }
-    return ret;
-}
 
 template <typename State, typename Goal, typename Successors>
 std::vector<State> bfs_search(const State& start, const Goal& isGoal,
@@ -154,7 +50,7 @@ std::vector<State> bfs_search(const State& start, const Goal& isGoal,
 
 std::ostream& operator<<(std::ostream& out, const std::pair<int, int>& p)
 {
-    return out << p.first << "; " << p.second;
+    return out << p.second << "; " << p.first;
 }
 
 const auto R = 7;
@@ -198,10 +94,6 @@ int main()
     for (const auto& p : path)
         std::cout << p << "\n";
     std::cout << "-----------------\n";
-    auto path2 = dfs_search(start, goal, succ);
-    for (const auto& p : path2)
-        std::cout << p << "\n";
-
     const auto path3 = idfs_search(start, goal, succ, 200);
     if (path3.result == DFS_RESULT::FOUND)
         for (const auto& p : path3.path)
@@ -209,23 +101,23 @@ int main()
 
     std::cout << "Searcher !!!!!!!!!!!!!!!!!\n";
     DFS_Searcher searcher(start, goal, succ);
-    const auto path4 = searcher.find_next(200);
-    const auto path5 = searcher.find_next(200);
-    std::cout << path4.result << ", " << path5.result << "\n";
-    if (path4.result == DFS_RESULT::FOUND && path5.result == DFS_RESULT::FOUND) {
-        const auto s4 = path4.path.size();
-        const auto s5 = path5.path.size();
-        const auto s = std::max(s4, s5);
-        for (size_t i = 0; i < s; ++i) {
-            if (i < s4)
-                std::cout << path4.path[i];
-            else
-                std::cout << "  ;  ";
-            std::cout << "  :  ";
-            if (i < s5)
-                std::cout << path5.path[i] << "\n";
-            else
-                std::cout << "  ;  \n";
-        }
-    }
+    const auto path4 = searcher.find_next(21);
+    const auto path5 = searcher.find_next(21);
+    const auto path6 = searcher.find_next(21);
+    const auto path7 = searcher.find_next(22);
+    const auto path8 = searcher.find_next(22);
+    const auto path9 = searcher.find_next(22);
+    const auto path10 = searcher.find_next(25);
+    const auto path11 = searcher.find_next(25);
+
+    std::cout << "path4 " << path4.result << "\n";
+    std::cout << "path5 " << path5.result << "\n";
+    std::cout << "path6 " << path6.result << "\n";
+    std::cout << "path7 " << path7.result << "\n";
+    std::cout << "path8 " << path8.result << "\n";
+    std::cout << "path9 " << path9.result << "\n";
+    std::cout << "path10 " << path10.result << "\n";
+    std::cout << "path11 " << path11.result << "\n";
+    for (const auto& p : path11.path)
+        std::cout << p << "\n";
 }

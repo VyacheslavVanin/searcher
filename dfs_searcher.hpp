@@ -1,16 +1,10 @@
 #pragma once
-#include <vector>
-#include <stack>
-#include <queue>
-#include <stdint.h>
-#include <algorithm>
 #include "stdhelper/containerhelper.hpp"
+#include <stack>
+#include <stdint.h>
+#include <vector>
 
-enum class DFS_RESULT {
-    FOUND,
-    NOT_FOUND,
-    CUTOFF
-};
+enum class DFS_RESULT { FOUND, NOT_FOUND, CUTOFF };
 
 template <typename State, typename IsGoal, typename GenSuccessors>
 class DFS_Searcher {
@@ -26,12 +20,11 @@ public:
     dfs_ret find_next(uint64_t maxDepth);
 
 private:
-    std::stack<std::pair<State, int>> nodes_to_visit;
-    std::vector<State> path;
-
     const State start;
     const IsGoal isGoal;
     const GenSuccessors successors;
+    std::stack<std::pair<State, uint64_t>> nodes_to_visit;
+    std::vector<State> path;
 };
 
 template <typename State, typename IsGoal, typename GenSuccessors>
@@ -58,9 +51,9 @@ DFS_Searcher<State, IsGoal, GenSuccessors>::find_next(uint64_t maxDepth)
                 return {{}, DFS_RESULT::NOT_FOUND};
         }
 
-        const auto& statelvl = extract(nodes_to_visit);
+        const auto& statelvl     = extract(nodes_to_visit);
         const auto& currentState = statelvl.first;
-        const auto& currentLvl = statelvl.second;
+        const auto& currentLvl   = statelvl.second;
 
         path.resize(currentLvl);
         path.push_back(currentState);

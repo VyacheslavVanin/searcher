@@ -23,7 +23,7 @@ std::vector<State> dfs_search(const State& start, const IsGoal& isGoal,
 {
     using namespace vvv::helpers;
 
-    std::stack<std::pair<State, int>> nodes_to_visit;
+    std::stack<std::pair<State, uint64_t>> nodes_to_visit;
     std::set<State> visited;
     std::vector<State> ret;
 
@@ -72,7 +72,7 @@ dfs_ret<State> dfs_search(const State& start, const IsGoal& isGoal,
 {
     using namespace vvv::helpers;
 
-    std::stack<std::pair<State, int>> nodes_to_visit;
+    std::stack<std::pair<State, uint64_t>> nodes_to_visit;
     std::set<State> visited;
     std::vector<State> ret;
     bool cutoff = false;
@@ -109,14 +109,14 @@ dfs_ret<State> dfs_search(const State& start, const IsGoal& isGoal,
 
 template <typename State, typename IsGoal, typename GenSuccessors>
 dfs_ret<State> idfs_search(const State& start, const IsGoal& isGoal,
-                           const GenSuccessors& successors, size_t maxDepth)
+                           const GenSuccessors& successors, uint64_t maxDepth)
 {
     dfs_ret<State> ret{{}, DFS_RESULT::NOT_FOUND};
-    for (size_t depth = 1; depth < maxDepth; ++depth) {
+    for (uint64_t depth = 1; depth < maxDepth; ++depth) {
         ret = dfs_search(start, isGoal, successors, depth);
-        if (ret.result == DFS_RESULT::FOUND ||
-            ret.result == DFS_RESULT::NOT_FOUND)
-            break;
+        if (ret.result == DFS_RESULT::CUTOFF)
+            continue;
+        break;
     }
     return ret;
 }
